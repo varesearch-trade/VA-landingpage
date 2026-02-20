@@ -19,33 +19,39 @@
             background-color: var(--bg-black);
             font-family: 'Inter', sans-serif;
             color: var(--text-white);
-            overflow: hidden;
+            overflow-x: hidden; /* Prevent horizontal scroll on mobile */
         }
 
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; }
 
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(90deg, rgba(5,5,5,0.95) 0%, rgba(5,5,5,0.6) 50%, rgba(5,5,5,0.95) 100%);
+            background: radial-gradient(circle at center, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0.95) 100%);
             z-index: 2; pointer-events: none;
         }
 
         /* --- LAYOUT --- */
-        .wrapper { position: relative; z-index: 10; display: flex; width: 100%; height: 100vh; }
+        .wrapper { 
+            position: relative; 
+            z-index: 10; 
+            display: flex; 
+            width: 100%; 
+            min-height: 100vh; 
+        }
 
         .left-panel {
             flex: 0 0 75%;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding-left: 8%;
+            padding: 0 8%;
             box-sizing: border-box;
         }
 
         .right-panel {
             flex: 0 0 25%;
             border-left: 1px solid var(--border-color);
-            background: rgba(10, 10, 10, 0.75);
+            background: rgba(10, 10, 10, 0.85);
             backdrop-filter: blur(20px);
             display: flex;
             flex-direction: column;
@@ -62,41 +68,75 @@
             transform: translateX(-50%);
             background: rgba(10, 10, 10, 0.95);
             border: 1px solid var(--primary-yellow);
-            padding: 15px 30px;
+            padding: 12px 24px;
             z-index: 1000;
             transition: top 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
             border-radius: 4px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
         }
-        .success-popup.show { top: 30px; }
-        .success-content { font-family: 'Roboto Mono', monospace; font-weight: bold; font-size: 0.9rem; }
+        .success-popup.show { top: 20px; }
+        .success-content { font-family: 'Roboto Mono', monospace; font-weight: bold; font-size: 0.8rem; }
 
         /* --- BRANDING --- */
-        .brand-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
-        .logo-square { background: var(--primary-yellow); color: black; font-weight: 900; font-size: 1.8rem; padding: 5px 12px; border-radius: 3px; }
-        .brand-name { font-size: 1.4rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .brand-wrapper { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; }
+        .logo-square { background: var(--primary-yellow); color: black; font-weight: 900; font-size: 1.5rem; padding: 4px 10px; border-radius: 3px; }
+        .brand-name { font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
 
-        h1 { font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 900; line-height: 0.95; margin: 0; text-transform: uppercase; }
+        h1 { font-size: clamp(2.2rem, 8vw, 5rem); font-weight: 900; line-height: 0.95; margin: 0; text-transform: uppercase; }
         .highlight { color: var(--primary-yellow); }
-        .sub-text { color: var(--text-gray); font-size: 1.1rem; max-width: 550px; margin: 30px 0; line-height: 1.5; }
+        .sub-text { color: var(--text-gray); font-size: clamp(0.9rem, 2vw, 1.1rem); max-width: 500px; margin: 25px 0; line-height: 1.6; }
 
         /* --- FORM --- */
-        .input-group { display: flex; background: #fff; padding: 4px; border-radius: 2px; width: 100%; max-width: 480px; }
-        input[type="email"] { flex: 1; border: none; padding: 15px 20px; font-size: 1rem; font-weight: 600; outline: none; color: #000; }
-        .btn-submit { background: #000; color: #fff; border: none; padding: 0 30px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+        .input-group { 
+            display: flex; 
+            background: #fff; 
+            padding: 3px; 
+            border-radius: 4px; 
+            width: 100%; 
+            max-width: 450px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        input[type="email"] { flex: 1; border: none; padding: 12px 15px; font-size: 1rem; font-weight: 600; outline: none; color: #000; width: 100%; }
+        .btn-submit { background: #000; color: #fff; border: none; padding: 0 25px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
         .btn-submit:hover { background: var(--primary-yellow); color: #000; }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* --- FEED --- */
-        .feed-label { font-size: 0.7rem; color: var(--primary-yellow); text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-        .live-dot { width: 8px; height: 8px; background: var(--primary-yellow); border-radius: 50%; animation: blink 1.5s infinite; }
+        .feed-label { font-size: 0.65rem; color: var(--primary-yellow); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .live-dot { width: 6px; height: 6px; background: var(--primary-yellow); border-radius: 50%; animation: blink 1.5s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        #tip-text { font-family: 'Roboto Mono', monospace; font-size: 1.1rem; line-height: 1.6; color: #efefef; min-height: 150px; }
+        #tip-text { font-family: 'Roboto Mono', monospace; font-size: 0.95rem; line-height: 1.5; color: #efefef; min-height: 80px; }
 
+        /* --- MOBILE OPTIMIZATION --- */
         @media (max-width: 1024px) {
-            .wrapper { flex-direction: column; }
-            .left-panel { flex: 0 0 60%; padding: 40px; }
-            .right-panel { flex: 0 0 40%; border-left: none; border-top: 1px solid var(--border-color); }
+            .wrapper { flex-direction: column; overflow-y: auto; }
+            .left-panel { 
+                flex: 1; 
+                padding: 60px 5% 40px 5%; 
+                align-items: center; 
+                text-align: center; 
+            }
+            .sub-text { margin-left: auto; margin-right: auto; }
+            .right-panel { 
+                flex: 0 0 auto; 
+                width: 100%; 
+                border-left: none; 
+                border-top: 1px solid var(--border-color); 
+                padding: 30px 5%;
+                background: rgba(5, 5, 5, 0.95);
+            }
+            .input-group { max-width: 100%; }
+            #tip-text { min-height: auto; text-align: center; justify-content: center; display: flex; align-items: center; }
+            .feed-label { justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            .input-group { flex-direction: column; background: transparent; gap: 10px; padding: 0; }
+            input[type="email"] { border-radius: 4px; text-align: center; }
+            .btn-submit { border-radius: 4px; padding: 15px; }
+            .brand-wrapper { margin-bottom: 15px; }
         }
     </style>
 </head>
@@ -131,7 +171,6 @@
     </div>
 
     <script>
-        // --- CANDLESTICK BACKGROUND ---
         const canvas = document.getElementById('candleCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, candles = [];
@@ -140,12 +179,19 @@
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
             candles = [];
+            // Space candles further apart on mobile for better performance
+            const spacing = width < 768 ? 20 : 34; 
             let lastClose = height / 2;
-            for (let i = 0; i < Math.ceil(width / 34); i++) {
+            for (let i = 0; i < Math.ceil(width / spacing); i++) {
                 const open = lastClose;
-                const close = open + (Math.random() - 0.5) * 120;
-                candles.push({ x: i * 34, open, close, high: Math.min(open, close) - 20, low: Math.max(open, close) + 20,
-                    color: close < open ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)'
+                const close = open + (Math.random() - 0.5) * 100;
+                candles.push({ 
+                    x: i * spacing, 
+                    open, 
+                    close, 
+                    high: Math.min(open, close) - 15, 
+                    low: Math.max(open, close) + 15,
+                    color: close < open ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'
                 });
                 lastClose = close;
             }
@@ -153,11 +199,15 @@
 
         function draw() {
             ctx.clearRect(0, 0, width, height);
+            const bodyWidth = width < 768 ? 12 : 22;
             candles.forEach(c => {
                 ctx.strokeStyle = c.color; ctx.fillStyle = c.color;
-                ctx.beginPath(); ctx.moveTo(c.x + 11, c.high); ctx.lineTo(c.x + 11, c.low); ctx.stroke();
-                ctx.fillRect(c.x, Math.min(c.open, c.close), 22, Math.max(Math.abs(c.open - c.close), 1));
-                c.open += (Math.random() - 0.5) * 0.4; c.close += (Math.random() - 0.5) * 0.4;
+                ctx.beginPath(); 
+                ctx.moveTo(c.x + (bodyWidth/2), c.high); 
+                ctx.lineTo(c.x + (bodyWidth/2), c.low); 
+                ctx.stroke();
+                ctx.fillRect(c.x, Math.min(c.open, c.close), bodyWidth, Math.max(Math.abs(c.open - c.close), 1));
+                c.open += (Math.random() - 0.5) * 0.3; c.close += (Math.random() - 0.5) * 0.3;
             });
             requestAnimationFrame(draw);
         }
@@ -165,7 +215,6 @@
         window.addEventListener('resize', init);
         init(); draw();
 
-        // --- INTELLIGENCE FEED ---
         const tips = [
             "STRATEGY: RSI divergence suggests upcoming reversal on Gold 1H.",
             "ANALYSIS: Liquidity grab confirmed at $67,200 support zone.",
@@ -186,34 +235,28 @@
         }
         setInterval(rotateTips, 5000); rotateTips();
 
-        // --- AJAX FORM SUBMISSION (No Page Change) ---
         const form = document.getElementById("launch-form");
         const btn = document.getElementById("submit-btn");
-        const input = document.getElementById("email-input");
         const popup = document.getElementById('success-notification');
 
         form.addEventListener("submit", async function(event) {
-            event.preventDefault(); // Stop page from redirecting
-            
+            event.preventDefault();
             btn.disabled = true;
             btn.textContent = "...";
-
             const data = new FormData(event.target);
-            
             fetch(event.target.action, {
                 method: form.method,
                 body: data,
                 headers: { 'Accept': 'application/json' }
             }).then(response => {
                 if (response.ok) {
-                    // Success!
                     popup.classList.add('show');
                     form.reset();
                     setTimeout(() => { popup.classList.remove('show'); }, 5000);
                 } else {
-                    alert("Error. Please try again.");
+                    alert("Submission failed. Please try again.");
                 }
-            }).catch(error => {
+            }).catch(() => {
                 alert("Connection error.");
             }).finally(() => {
                 btn.disabled = false;
