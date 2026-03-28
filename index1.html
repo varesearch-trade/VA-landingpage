@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VAresearch.trade — Systematic Alpha Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700;900&family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#07080a;--ink2:#0d0f12;--ink3:#111318;--ink4:#1a1d24;
+  --wire:rgba(255,255,255,.06);--wire2:rgba(255,255,255,.11);
+  --brass:#b8962e;--brass2:#d4ae4a;--bl:rgba(184,150,46,.2);
+  --cream:#e8e2d9;--cream2:#c0b8ae;--cream3:#807870;--cream4:#3e3c38;
+  --gain:#3a8c5a;--loss:#a84242;
+  --mono:'Roboto Mono',monospace;
+  --head:'Space Grotesk',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--cream2);font-family:var(--mono);font-size:12px;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--bl);color:var(--cream)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--ink)}::-webkit-scrollbar-thumb{background:var(--ink4)}
+
+/* ═══════════ STICKY NAV ═══════════ */
+#nav{
+  position:fixed;top:0;left:0;right:0;z-index:900;height:52px;
+  background:rgba(7,8,10,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--wire);
+  display:flex;align-items:center;padding:0 40px;gap:0;
+}
+.nav-logo{font-family:var(--head);font-size:17px;font-weight:700;color:var(--cream);cursor:pointer;margin-right:auto;display:flex;align-items:center;gap:10px}
+.nav-logo-badge{background:var(--brass);color:var(--ink);font-weight:900;font-size:13px;padding:2px 8px;line-height:1.4}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-link{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--cream3);cursor:pointer;transition:color .15s;text-decoration:none}
+.nav-link:hover{color:var(--cream)}
+.nav-join{
+  background:var(--brass);color:var(--ink);border:none;
+  padding:7px 20px;font-family:var(--head);font-weight:700;font-size:10px;
+  letter-spacing:.08em;cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;gap:6px;margin-left:20px;
+}
+.nav-join:hover{background:var(--brass2)}
+.nav-join-dot{width:5px;height:5px;border-radius:50%;background:var(--ink);animation:ndot 2s infinite}
+@keyframes ndot{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ═══════════ SECTIONS BASE ═══════════ */
+.section{padding:96px 40px;border-bottom:1px solid var(--wire);max-width:1100px;margin:0 auto}
+.sec-eyebrow{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--brass);margin-bottom:12px}
+.sec-title{font-family:var(--head);font-size:clamp(28px,4vw,46px);font-weight:700;color:var(--cream);line-height:1.1;margin-bottom:16px}
+.sec-sub{font-size:12px;color:var(--cream3);line-height:1.8;max-width:580px}
+
+/* ═══════════ HERO ═══════════ */
+#hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:0;overflow:hidden;border-bottom:1px solid var(--wire)}
+#hero-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.6}
+#hero-matrix{position:absolute;top:0;left:0;width:100%;height:100%;font-size:8px;color:rgba(184,150,46,.05);line-height:1.9;overflow:hidden;pointer-events:none;z-index:1;user-select:none}
+#hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(7,8,10,.05) 0%,rgba(7,8,10,.97) 70%);z-index:2;pointer-events:none}
+.hero-inner{position:relative;z-index:10;display:grid;grid-template-columns:1fr 360px;max-width:1100px;margin:0 auto;width:100%;padding:0 40px;gap:0;min-height:100vh;align-items:center}
+.hero-left{padding:80px 0}
+.hero-brand{display:flex;align-items:center;gap:12px;margin-bottom:40px}
+.hero-logo-sq{background:var(--brass);color:var(--ink);font-family:var(--head);font-weight:900;font-size:2rem;padding:4px 14px;line-height:1;box-shadow:0 0 40px rgba(184,150,46,.25)}
+.hero-brand-name{font-family:var(--head);font-size:1rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--cream)}
+.hero-h{font-family:var(--head);font-size:clamp(2.8rem,6vw,5.5rem);font-weight:900;line-height:.9;letter-spacing:-.03em;text-transform:uppercase;color:var(--cream);margin-bottom:20px;opacity:0;animation:rise .7s .3s forwards}
+.hero-h .hl{color:var(--brass);display:block}
+.hero-p{font-size:13px;color:#888;line-height:1.7;max-width:480px;margin-bottom:36px;opacity:0;animation:rise .7s .5s forwards}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;opacity:0;animation:rise .7s .7s forwards}
+.btn-join{background:var(--brass);color:var(--ink);border:none;padding:12px 28px;font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.08em;cursor:pointer;transition:all .18s}
+.btn-join:hover{background:var(--brass2)}
+.btn-ghost{background:transparent;border:1px solid var(--wire2);color:var(--cream2);padding:12px 20px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer;transition:all .18s}
+.btn-ghost:hover{border-color:var(--bl);color:var(--brass)}
+.hero-right{border-left:1px solid var(--wire);background:rgba(5,5,5,.6);backdrop-filter:blur(40px);padding:40px 32px;height:100%;display:flex;flex-direction:column;justify-content:center;gap:0;min-height:100vh}
+.hr-tag{display:flex;align-items:center;gap:7px;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--brass);margin-bottom:18px;font-weight:700}
+.hr-pulse{width:6px;height:6px;border-radius:50%;background:var(--brass);box-shadow:0 0 8px var(--brass);animation:hp 1.6s infinite}
+@keyframes hp{0%,100%{opacity:1}50%{opacity:.25}}
+.hr-feed{font-size:11px;line-height:1.65;color:#ccc;min-height:68px;margin-bottom:24px;border-left:2px solid var(--bl);padding-left:12px;transition:opacity .4s}
+.hr-divider{height:1px;background:var(--wire);margin-bottom:20px}
+.hr-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--wire)}
+.hr-row:last-child{border-bottom:none}
+.hr-sym{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#555}
+.hr-val{font-size:13px;font-weight:700;color:var(--cream);text-align:right}
+.hr-chg{font-size:9px;min-width:52px;text-align:right;font-weight:600}
+.up{color:#00ff88}.dn{color:#ff4444}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════ METRICS BAR ═══════════ */
+#metrics{border-bottom:1px solid var(--wire);padding:0}
+.metrics-inner{display:grid;grid-template-columns:repeat(4,1fr);max-width:1100px;margin:0 auto}
+.mc{padding:28px 40px;border-right:1px solid var(--wire)}
+.mc:last-child{border-right:none}
+.mc-v{font-family:var(--head);font-size:40px;font-weight:300;color:var(--cream);line-height:1;margin-bottom:5px}
+.mc-l{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--cream3)}
+
+/* ═══════════ PROBLEM ═══════════ */
+.prob-row{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border:1px solid var(--wire);background:var(--ink2);margin-bottom:8px;opacity:0;transform:translateX(-10px);transition:all .4s}
+.prob-row.show{opacity:1;transform:translateX(0)}
+.prob-x{width:20px;height:20px;flex-shrink:0;margin-top:1px}
+.prob-x rect{fill:var(--ink3)}
+.prob-x line{stroke:var(--loss);stroke-width:1.5}
+.prob-title{font-size:11px;color:var(--cream);margin-bottom:3px;font-weight:500}
+.prob-desc{font-size:10px;color:var(--cream3);line-height:1.6}
+.prob-callout{margin-top:20px;padding:14px 16px;border-left:2px solid var(--brass);background:rgba(184,150,46,.04);font-size:11px;color:var(--cream2);line-height:1.7}
+
+/* ═══════════ TOOLS GRID ═══════════ */
+.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--wire);margin-top:32px}
+.tool-cell{background:var(--ink2);padding:20px 18px;opacity:0;transform:translateY(8px);transition:all .35s;cursor:default}
+.tool-cell.show{opacity:1;transform:translateY(0)}
+.tool-cell:hover{background:var(--ink3)}
+.tc-n{font-size:8px;color:var(--brass);letter-spacing:.15em;margin-bottom:6px}
+.tc-name{font-size:11px;color:var(--cream);margin-bottom:5px;font-weight:700}
+.tc-desc{font-size:9px;color:var(--cream3);line-height:1.55}
+.tc-badge{display:inline-block;margin-top:8px;font-size:7px;padding:2px 7px;border:1px solid;letter-spacing:.08em}
+.tc-live{border-color:rgba(58,140,90,.4);color:#6abf8a}
+.tc-pro{border-color:var(--bl);color:var(--brass)}
+.tc-prem{border-color:rgba(130,70,180,.4);color:#b070e0}
+
+/* ═══════════ LIVE PARITY DEMO ═══════════ */
+#demo{background:var(--ink2);border-top:1px solid var(--wire);border-bottom:1px solid var(--wire)}
+.demo-inner{max-width:1100px;margin:0 auto;padding:60px 40px}
+.demo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.demo-live{display:flex;align-items:center;gap:6px;font-size:8px;color:var(--gain)}
+.demo-dot{width:5px;height:5px;border-radius:50%;background:var(--gain);animation:ddot 1.2s infinite}
+@keyframes ddot{0%,100%{opacity:1}50%{opacity:.25}}
+.status-bar{display:flex;gap:20px;flex-wrap:wrap;padding:8px 14px;background:var(--ink3);border:1px solid var(--wire);margin-bottom:10px}
+.sb-k{color:var(--cream3);margin-right:4px;font-size:9px}
+.sb-v{color:var(--brass);font-size:9px;font-weight:700}
+.sig-strip{display:flex;gap:6px;min-height:26px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.chip{font-size:8px;padding:2px 8px;font-weight:700;letter-spacing:.04em}
+.chip-sell{background:rgba(168,66,66,.12);border:1px solid rgba(168,66,66,.25);color:#d07070}
+.chip-buy{background:rgba(58,140,90,.1);border:1px solid rgba(58,140,90,.22);color:#6abf8a}
+.sig-nil{font-size:9px;color:var(--cream4)}
+.sig-banner{display:none;padding:6px 12px;font-size:9px;font-weight:700;border-left:2px solid;letter-spacing:.04em;margin-bottom:8px}
+.sb-sell{background:rgba(168,66,66,.08);border-color:var(--loss);color:#d07070}
+.sb-buy{background:rgba(58,140,90,.07);border-color:var(--gain);color:#6abf8a}
+.chain-wrap{overflow-x:auto}
+table.chain{width:100%;border-collapse:collapse;font-size:9px}
+table.chain th{padding:5px 6px;font-size:7px;letter-spacing:.08em;color:var(--cream4);border-bottom:1px solid var(--wire);font-weight:400}
+.th-p{color:rgba(220,130,110,.7);text-align:right}
+.th-c{color:rgba(130,180,220,.7);text-align:right}
+.th-s{text-align:center;color:var(--cream3)}
+.th-x{text-align:center;color:var(--brass)}
+table.chain td{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.025)}
+table.chain tr.atm td{background:rgba(184,150,46,.05);border-top:1px solid rgba(184,150,46,.1);border-bottom:1px solid rgba(184,150,46,.1)}
+.vp{color:rgba(220,130,110,.85);text-align:right}
+.vc{color:rgba(130,180,220,.85);text-align:right}
+.vs{text-align:center;color:var(--cream)}
+.va{text-align:center;color:var(--brass);font-weight:700}
+.vx{text-align:center}
+.pp{color:var(--loss);font-weight:700;text-align:right}.pn{color:var(--gain);font-weight:700;text-align:right}.pz{color:var(--cream4);text-align:right}
+.dp{color:rgba(220,160,130,.7);text-align:right}.dn{color:rgba(130,200,160,.7);text-align:right}.dz{color:var(--cream4);text-align:right}.da{color:var(--wire);text-align:right}
+.ss{color:var(--loss);font-size:8px;font-weight:700;text-align:center}.sb_{color:var(--gain);font-size:8px;font-weight:700;text-align:center}.sn{color:var(--cream4);text-align:center}
+@keyframes rowfl{0%{background:rgba(184,150,46,.15)}100%{background:transparent}}
+table.chain tr.fl td{animation:rowfl .7s ease-out}
+
+/* ═══════════ GREEKS ═══════════ */
+.greeks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--wire);margin-bottom:16px}
+.gc{background:var(--ink2);padding:16px 14px}
+.gc-sym{font-size:22px;color:var(--brass);margin-bottom:2px}
+.gc-nm{font-size:7px;color:var(--cream3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.gc-val{font-size:15px;color:var(--cream);font-weight:700;margin-bottom:3px}
+.gc-interp{font-size:8px;color:var(--cream3);line-height:1.5}
+.gc-bg{height:2px;background:var(--wire);margin-top:6px}
+.gc-bar{height:2px;transition:width 1s ease}
+.iv-row{display:flex;gap:8px;align-items:center;padding:7px 10px;background:var(--ink2);border-bottom:1px solid var(--wire)}
+.iv-lbl{font-size:8px;color:var(--cream3);min-width:58px}
+.iv-bg{flex:1;height:3px;background:var(--wire2)}
+.iv-fill{height:3px;background:var(--brass);transition:width 1.2s ease}
+.iv-val{font-size:8px;color:var(--brass);min-width:38px;text-align:right}
+
+/* ═══════════ BUSINESS MODEL ═══════════ */
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--wire);margin-bottom:20px}
+.plan{background:var(--ink2);padding:20px 16px}
+.plan.featured{background:var(--ink3)}
+.plan-nm{font-size:8px;letter-spacing:.15em;color:var(--brass);text-transform:uppercase;margin-bottom:4px}
+.plan-price{font-family:var(--head);font-size:32px;font-weight:300;color:var(--cream);line-height:1;margin-bottom:3px}
+.plan-price span{font-size:11px;color:var(--cream4);font-family:var(--mono)}
+.plan-yr{font-size:8px;color:var(--cream4);margin-bottom:12px}
+.pf{font-size:9px;color:var(--cream2);padding:3px 0;border-bottom:1px solid var(--wire)}
+.pf.y::before{content:'✓  ';color:var(--gain)}
+.pf.n{color:var(--cream4)}.pf.n::before{content:'—  '}
+.plan-cta{width:100%;margin-top:12px;padding:8px;font-family:var(--mono);font-size:8px;letter-spacing:.1em;cursor:pointer;text-transform:uppercase;transition:all .18s}
+.plan-cta.prim{background:var(--brass);color:var(--ink);border:none}.plan-cta.prim:hover{background:var(--brass2)}
+.plan-cta.out{background:transparent;color:var(--cream2);border:1px solid var(--wire2)}.plan-cta.out:hover{border-color:var(--bl);color:var(--brass)}
+.mrr-box{padding:16px 20px;border:1px solid var(--bl);background:rgba(184,150,46,.04);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.mrr-val{font-family:var(--head);font-size:28px;font-weight:700;color:var(--brass)}
+.rbar{height:5px;background:var(--wire);overflow:hidden;margin-bottom:6px}
+.rbar-fill{height:5px;background:var(--gain);width:0;transition:width 1.5s ease}
+.rbar-labels{display:flex;justify-content:space-between;font-size:8px;color:var(--cream4)}
+
+/* ═══════════ WHY NOW ═══════════ */
+.mbox-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--wire);margin-bottom:20px}
+.mbox{background:var(--ink2);padding:20px}
+.mbox-v{font-family:var(--head);font-size:32px;font-weight:700;color:var(--cream);margin-bottom:3px}
+.mbox-v.brass{color:var(--brass)}
+.mbox-l{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream3)}
+.mbox-sub{font-size:9px;color:var(--gain);margin-top:4px}
+.equity-wrap{margin-bottom:20px}
+.equity-lbl{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--cream4);margin-bottom:6px}
+#equity-svg{width:100%;height:64px}
+.quote{padding:14px 16px;border-left:2px solid var(--wire2)}
+.qt{font-size:11px;color:var(--cream2);line-height:1.7;font-style:italic;margin-bottom:6px;font-family:var(--head);font-weight:300}
+.qa{font-size:8px;color:var(--cream4);letter-spacing:.08em}
+
+/* ═══════════ CTA FOOTER ═══════════ */
+#cta{background:var(--ink2);border-top:1px solid var(--wire)}
+.cta-inner{max-width:1100px;margin:0 auto;padding:80px 40px;text-align:center}
+.cta-h{font-family:var(--head);font-size:clamp(36px,6vw,64px);font-weight:900;line-height:.95;letter-spacing:-.03em;text-transform:uppercase;color:var(--cream);margin-bottom:16px}
+.cta-h span{color:var(--brass)}
+.cta-sub{font-size:12px;color:#888;line-height:1.7;max-width:480px;margin:0 auto 40px}
+.cta-btns{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:40px}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--wire);border:1px solid var(--wire);max-width:600px;margin:0 auto 28px}
+.pillar{background:var(--ink);padding:16px;text-align:center}
+.pillar-v{font-family:var(--head);font-size:15px;color:var(--brass);margin-bottom:3px;font-weight:700}
+.pillar-l{font-size:8px;color:var(--cream4);letter-spacing:.08em}
+.cta-footer-note{font-size:8px;color:var(--cream4);letter-spacing:.06em}
+.cta-footer-note span{color:var(--brass)}
+
+/* ═══════════ SCROLL REVEAL ═══════════ */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ═══════════ RESPONSIVE ═══════════ */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr}.hero-right{display:none}
+  .tools-grid{grid-template-columns:1fr 1fr}.greeks-grid{grid-template-columns:1fr 1fr}
+  .metrics-inner{grid-template-columns:1fr 1fr}
+  .plans-grid{grid-template-columns:1fr}.mbox-grid{grid-template-columns:1fr}
+  #nav .nav-links{display:none}
+  .hero-left{padding:40px 0}
+}
+@media(max-width:600px){
+  .section,.demo-inner,.cta-inner{padding-left:20px;padding-right:20px}
+  #nav{padding:0 20px}.hero-inner{padding:0 20px}
+  .hero-h{font-size:2.4rem}.tools-grid{grid-template-columns:1fr}
+  .metrics-inner{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ STICKY NAV ═══════ -->
+<nav id="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-badge">VA</div>
+    research.trade
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="#platform">Platform</a>
+    <a class="nav-link" href="#demo">Live Demo</a>
+    <a class="nav-link" href="#pricing">Pricing</a>
+    <a class="nav-link" href="#market">Why Now</a>
+  </div>
+  <button class="nav-join" onclick="document.getElementById('join-email').focus();document.getElementById('hero').scrollIntoView({behavior:'smooth'})">
+    <span class="nav-join-dot"></span>
+    Join varesearch.trade
+  </button>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div id="hero-matrix"></div>
+  <div id="hero-overlay"></div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-brand">
+        <div class="hero-logo-sq">VA</div>
+        <div class="hero-brand-name">Research.Trade</div>
+      </div>
+      <h1 class="hero-h">
+        Systematic<br>
+        <span class="hl">Alpha</span>
+        Terminal
+      </h1>
+      <p class="hero-p">Proprietary put-call parity analytics, Black-Scholes Greek surface, BSX/BKX ratio diff sheets and NSE historical backtesting — institutional-grade research at accessible pricing.</p>
+      <div class="hero-actions">
+        <form id="join-form" style="display:flex;gap:0;max-width:380px;width:100%" onsubmit="handleJoin(event)">
+          <input id="join-email" type="email" placeholder="Enter your email for early access" required
+            style="flex:1;background:rgba(255,255,255,.05);border:1px solid var(--wire2);border-right:none;color:var(--cream);padding:11px 14px;font-family:var(--mono);font-size:10px;outline:none"/>
+          <button type="submit" class="btn-join" style="white-space:nowrap">Join Platform</button>
+        </form>
+        <button class="btn-ghost" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">&#9654; See Live Demo</button>
+      </div>
+      <div style="margin-top:16px;font-size:9px;color:var(--cream4)">7-day free trial · No credit card · Cancel anytime</div>
+    </div>
+    <div class="hero-right">
+      <div class="hr-tag"><span class="hr-pulse"></span>Institutional Feed</div>
+      <div id="hr-feed" class="hr-feed">Initialising data streams…</div>
+      <div class="hr-divider"></div>
+      <div class="hr-row"><span class="hr-sym">BANKNIFTY</span><span class="hr-val" id="hv-bn">55,678</span><span class="hr-chg dn" id="hc-bn">−0.18%</span></div>
+      <div class="hr-row"><span class="hr-sym">NIFTY 50</span><span class="hr-val" id="hv-nf">24,453</span><span class="hr-chg up" id="hc-nf">+0.32%</span></div>
+      <div class="hr-row"><span class="hr-sym">FINNIFTY</span><span class="hr-val" id="hv-fn">22,814</span><span class="hr-chg up" id="hc-fn">+0.21%</span></div>
+      <div class="hr-row"><span class="hr-sym">SENSEX</span><span class="hr-val" id="hv-sx">80,955</span><span class="hr-chg up" id="hc-sx">+0.44%</span></div>
+      <div class="hr-row"><span class="hr-sym">INDIA VIX</span><span class="hr-val" id="hv-vx">14.82</span><span class="hr-chg dn" id="hc-vx">−2.10%</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ METRICS ═══════ -->
+<div id="metrics">
+  <div class="metrics-inner">
+    <div class="mc reveal"><div class="mc-v">4.5Cr</div><div class="mc-l">Active F&O traders in India</div></div>
+    <div class="mc reveal"><div class="mc-v">5s</div><div class="mc-l">Minimum data refresh rate</div></div>
+    <div class="mc reveal"><div class="mc-v">6</div><div class="mc-l">Institutional research tools</div></div>
+    <div class="mc reveal"><div class="mc-v">₹499</div><div class="mc-l">Entry plan — per month</div></div>
+  </div>
+</div>
+
+<!-- ═══════ PROBLEM ═══════ -->
+<div class="section reveal" id="problem">
+  <div class="sec-eyebrow">The Problem</div>
+  <h2 class="sec-title">Options traders are underserved<br>by existing tools.</h2>
+  <div style="margin-top:32px">
+    <div class="prob-row" id="pr0">
+      <svg class="prob-x" viewBox="0 0 20 20"><rect width="20" height="20" rx="2"/><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>
+      <div><div class="prob-title">Parity arbitrage is invisible in retail platforms</div><div class="prob-desc">No platform shows real-time synthetic futures vs actual futures deviation. Traders miss 15–40 point dislocations at every expiry.</div></div>
+    </div>
+    <div class="prob-row" id="pr1">
+      <svg class="prob-x" viewBox="0 0 20 20"><rect width="20" height="20" rx="2"/><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>
+      <div><div class="prob-title">Greeks require Bloomberg or expensive terminals</div><div class="prob-desc">Live Delta, Gamma, Theta, Vega across all strikes costs ₹40,000+/year on institutional platforms. Inaccessible to independent traders.</div></div>
+    </div>
+    <div class="prob-row" id="pr2">
+      <svg class="prob-x" viewBox="0 0 20 20"><rect width="20" height="20" rx="2"/><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>
+      <div><div class="prob-title">Ratio diff sheets are rebuilt manually in Excel every morning</div><div class="prob-desc">Institutional traders spend 45 minutes daily rebuilding BSX/BKX diff sheets from scratch. No automation exists for this workflow.</div></div>
+    </div>
+    <div class="prob-callout reveal">India has 4.5 crore active F&O traders. Less than 0.1% have access to proper put-call parity tools. This is the gap VAresearch fills.</div>
+  </div>
+</div>
+
+<!-- ═══════ PLATFORM ═══════ -->
+<div class="section reveal" id="platform">
+  <div class="sec-eyebrow">The Solution</div>
+  <h2 class="sec-title">Six institutional tools.<br>One platform.</h2>
+  <div class="sec-sub">Each module is designed for a specific edge. Live data from Upstox API. Backtesting from NSE historical CSV. Runs entirely in the browser.</div>
+  <div class="tools-grid" id="tools-grid">
+    <div class="tool-cell"><div class="tc-n">01</div><div class="tc-name">Parity Sheet</div><div class="tc-desc">Live put-call parity with synthetic future, auto-signals, OI walls, sound alerts, flash animations</div><span class="tc-badge tc-live">LIVE</span></div>
+    <div class="tool-cell"><div class="tc-n">02</div><div class="tc-name">BSX/BKX Ratio Diff</div><div class="tc-desc">600/500/400 configurable diff columns — exact format used by institutional options desks</div><span class="tc-badge tc-pro">PRO</span></div>
+    <div class="tool-cell"><div class="tc-n">03</div><div class="tc-name">Greeks Calculator</div><div class="tc-desc">Black-Scholes Δ Γ θ ν across all strikes · IV skew surface · misprice vs fair value detection</div><span class="tc-badge tc-pro">PRO</span></div>
+    <div class="tool-cell"><div class="tc-n">04</div><div class="tc-name">P&L Calculator</div><div class="tc-desc">Reversal and conversion scenarios across 9 expiry price points. Risk-reward, breakeven, net Greeks</div><span class="tc-badge tc-pro">PRO</span></div>
+    <div class="tool-cell"><div class="tc-n">05</div><div class="tc-name">Backtesting Engine</div><div class="tc-desc">Upload NSE historical CSV. Parity signal hit-rate, equity curve, strike optimizer, 90-day analysis</div><span class="tc-badge tc-prem">PREMIUM</span></div>
+    <div class="tool-cell"><div class="tc-n">06</div><div class="tc-name">Market Insights</div><div class="tc-desc">Weekly parity reports, IV regime analysis, expiry observations from the VAresearch desk</div><span class="tc-badge tc-live">ALL PLANS</span></div>
+  </div>
+</div>
+
+<!-- ═══════ LIVE PARITY DEMO ═══════ -->
+<div id="demo">
+  <div class="demo-inner">
+    <div class="demo-header">
+      <div>
+        <div class="sec-eyebrow" style="margin-bottom:4px">Product Demo — Parity Sheet</div>
+        <div style="font-family:var(--head);font-size:22px;font-weight:700;color:var(--cream)">Real-time signals fire automatically.</div>
+      </div>
+      <div class="demo-live"><span class="demo-dot"></span>LIVE SIMULATION</div>
+    </div>
+    <div id="p-banner" class="sig-banner"></div>
+    <div class="sig-strip" id="p-sigs"><span class="sig-nil">Monitoring parity…</span></div>
+    <div class="status-bar">
+      <span><span class="sb-k">SPOT</span><span class="sb-v" id="p-spot">—</span></span>
+      <span><span class="sb-k">SYN FUT</span><span class="sb-v" id="p-syn">—</span></span>
+      <span><span class="sb-k">ATM</span><span class="sb-v" id="p-atm">—</span></span>
+      <span><span class="sb-k">CALL WALL</span><span class="sb-v" id="p-cw">—</span></span>
+      <span><span class="sb-k">PUT WALL</span><span class="sb-v" id="p-pw">—</span></span>
+      <span><span class="sb-k">PCR</span><span class="sb-v" id="p-pcr">—</span></span>
+      <span><span class="sb-k">TICKS</span><span class="sb-v" id="p-ticks">0</span></span>
+    </div>
+    <div class="chain-wrap">
+      <table class="chain"><thead id="p-thead"></thead><tbody id="p-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ GREEKS DEMO ═══════ -->
+<div class="section reveal" id="greeks-sec">
+  <div class="sec-eyebrow">Product Demo — Greeks Calculator</div>
+  <h2 class="sec-title">Full options surface, live.</h2>
+  <div class="greeks-grid" id="g-cards">
+    <div class="gc"><div class="gc-sym">Δ</div><div class="gc-nm">Delta</div><div class="gc-val" id="g-d">0.512</div><div class="gc-interp">₹0.51 move per ₹1 spot move</div><div class="gc-bg"><div class="gc-bar" id="gb-d" style="background:var(--brass);width:51%"></div></div></div>
+    <div class="gc"><div class="gc-sym">Γ</div><div class="gc-nm">Gamma</div><div class="gc-val" id="g-g">0.000142</div><div class="gc-interp">Delta accelerates near expiry</div><div class="gc-bg"><div class="gc-bar" id="gb-g" style="background:#3a6fa8;width:68%"></div></div></div>
+    <div class="gc"><div class="gc-sym">θ</div><div class="gc-nm">Theta</div><div class="gc-val" id="g-t" style="color:var(--loss)">−18.4</div><div class="gc-interp">₹18.4 lost per day to time decay</div><div class="gc-bg"><div class="gc-bar" id="gb-t" style="background:var(--loss);width:74%"></div></div></div>
+    <div class="gc"><div class="gc-sym">ν</div><div class="gc-nm">Vega</div><div class="gc-val" id="g-v">42.6</div><div class="gc-interp">₹42.6 gain per 1% IV rise</div><div class="gc-bg"><div class="gc-bar" id="gb-v" style="background:var(--gain);width:43%"></div></div></div>
+  </div>
+  <div style="font-size:8px;color:var(--cream4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">IV Skew — BankNifty current expiry</div>
+  <div id="iv-rows"></div>
+</div>
+
+<!-- ═══════ PRICING ═══════ -->
+<div class="section reveal" id="pricing">
+  <div class="sec-eyebrow">Subscription Plans</div>
+  <h2 class="sec-title">SaaS subscription.<br>Recurring revenue.</h2>
+  <div class="plans-grid" style="margin-top:32px">
+    <div class="plan">
+      <div class="plan-nm">Basic</div>
+      <div class="plan-price">₹499<span>/month</span></div>
+      <div class="plan-yr">₹4,499/year — save 25%</div>
+      <div class="pf y">Live Parity Sheet</div>
+      <div class="pf y">BANKNIFTY + NIFTY</div>
+      <div class="pf y">30-second auto-refresh</div>
+      <div class="pf y">Sound + visual alerts</div>
+      <div class="pf n">BSX/BKX Ratio Diff</div>
+      <div class="pf n">Greeks Calculator</div>
+      <div class="pf n">Backtesting Engine</div>
+      <button class="plan-cta out" onclick="joinPlan('basic')">Start 7-Day Trial →</button>
+    </div>
+    <div class="plan featured">
+      <div style="font-size:7px;color:var(--brass);letter-spacing:.12em;margin-bottom:6px">★ MOST POPULAR</div>
+      <div class="plan-nm">Pro</div>
+      <div class="plan-price">₹999<span>/month</span></div>
+      <div class="plan-yr">₹8,999/year — save 25%</div>
+      <div class="pf y">Everything in Basic</div>
+      <div class="pf y">All 5 instruments</div>
+      <div class="pf y">10-second live refresh</div>
+      <div class="pf y">BSX/BKX Ratio Diff</div>
+      <div class="pf y">Greeks Calculator</div>
+      <div class="pf y">P&L Calculator</div>
+      <div class="pf n">Backtesting Engine</div>
+      <button class="plan-cta prim" onclick="joinPlan('pro')">Start 7-Day Trial →</button>
+    </div>
+    <div class="plan">
+      <div class="plan-nm">Premium</div>
+      <div class="plan-price">₹2,499<span>/month</span></div>
+      <div class="plan-yr">₹19,999/year — save 33%</div>
+      <div class="pf y">Everything in Pro</div>
+      <div class="pf y">5-second ultra-refresh</div>
+      <div class="pf y">Backtesting Engine</div>
+      <div class="pf y">NSE historical CSV</div>
+      <div class="pf y">Signal hit-rate analytics</div>
+      <div class="pf y">WhatsApp support</div>
+      <div class="pf y">Excel data export</div>
+      <button class="plan-cta out" onclick="joinPlan('premium')">Start 7-Day Trial →</button>
+    </div>
+  </div>
+  <div style="font-size:9px;color:var(--cream4);text-align:center;margin-top:10px">7-day free trial on all plans · No credit card required · Instant activation via Razorpay</div>
+</div>
+
+<!-- ═══════ WHY NOW ═══════ -->
+<div class="section reveal" id="market">
+  <div class="sec-eyebrow">Why Now</div>
+  <h2 class="sec-title">F&O market is exploding.<br>Tools haven't caught up.</h2>
+  <div class="mbox-grid" style="margin-top:32px">
+    <div class="mbox reveal"><div class="mbox-v brass">4.5 Cr</div><div class="mbox-l">Active F&O traders in India</div><div class="mbox-sub">+40% YoY growth</div></div>
+    <div class="mbox reveal"><div class="mbox-v">₹4,200 Cr</div><div class="mbox-l">Daily BankNifty options turnover</div><div class="mbox-sub">World's largest options market</div></div>
+    <div class="mbox reveal"><div class="mbox-v">0</div><div class="mbox-l">Retail parity tools available today</div><div class="mbox-sub">Clear white space in market</div></div>
+    <div class="mbox reveal"><div class="mbox-v brass">₹40K+</div><div class="mbox-l">Bloomberg terminal annual cost</div><div class="mbox-sub">We deliver the same at ₹12K/yr</div></div>
+  </div>
+  <div class="equity-wrap reveal">
+    <div class="equity-lbl">Parity signal equity curve — 90-day backtest (demo)</div>
+    <svg id="equity-svg" viewBox="0 0 600 64" preserveAspectRatio="none"></svg>
+  </div>
+  <div class="quote reveal">
+    <div class="qt">"I used to rebuild the BSX ratio diff sheet every morning in Excel. This replicates it exactly — but live. The time saving alone justifies the subscription."</div>
+    <div class="qa">— Prop trader, Mumbai · Beta tester</div>
+  </div>
+</div>
+
+<!-- ═══════ MRR PROJECTION ═══════ -->
+<div class="section reveal" id="revenue">
+  <div class="sec-eyebrow">Business Model</div>
+  <h2 class="sec-title">SaaS. Recurring. Scalable.</h2>
+  <div class="mrr-box reveal" style="margin-top:32px">
+    <div><div style="font-size:9px;color:var(--cream3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Projected MRR at 400 users</div><div style="font-size:10px;color:var(--cream4)">Conservative estimate · 7-day trial funnel</div></div>
+    <div class="mrr-val" id="mrr-val">₹0</div>
+  </div>
+  <div class="rbar"><div class="rbar-fill" id="rbar-fill"></div></div>
+  <div class="rbar-labels"><span>Month 1: ₹50K</span><span>Month 6: ₹2.5L</span><span>Month 12: ₹7.5L MRR</span></div>
+</div>
+
+<!-- ═══════ CTA ═══════ -->
+<div id="cta">
+  <div class="cta-inner">
+    <div class="sec-eyebrow" style="margin-bottom:12px">VAresearch.trade</div>
+    <div class="cta-h">Ready to deploy.<br><span>Ready to scale.</span></div>
+    <p class="cta-sub">Platform is built and production-ready. Node.js backend, Upstox API integration, Razorpay payments. 7-day free trial funnel. First 100 users targeted in 60 days.</p>
+    <div class="cta-btns">
+      <button class="btn-join" style="padding:12px 32px;font-size:11px" onclick="document.getElementById('join-email').focus();document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Join varesearch.trade</button>
+      <button class="btn-ghost" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">See Live Demo →</button>
+    </div>
+    <div class="pillars">
+      <div class="pillar"><div class="pillar-v">Built</div><div class="pillar-l">Production-ready platform</div></div>
+      <div class="pillar"><div class="pillar-v">Validated</div><div class="pillar-l">Beta traders confirmed need</div></div>
+      <div class="pillar"><div class="pillar-v">Scalable</div><div class="pillar-l">SaaS, low marginal cost</div></div>
+    </div>
+    <div class="cta-footer-note">Contact: <span>varesearch.trade</span> &nbsp;·&nbsp; 7-day free trial · All plans</div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ CANVAS ═══════════ */
+(function(){
+  const cv=document.getElementById('hero-canvas');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  let W,H,groups=[];
+  function init(){
+    W=cv.width=document.getElementById('hero').offsetWidth||window.innerWidth;
+    H=cv.height=document.getElementById('hero').offsetHeight||window.innerHeight;
+    groups=[];
+    for(let g=0;g<3;g++){
+      let c=[],last=(H/4)*(g+1);
+      for(let i=0;i<Math.ceil(W/34)+6;i++){
+        const o=last,cl=o+(Math.random()-.5)*70;
+        c.push({x:i*34,o,cl});last=cl;
+      }
+      groups.push(c);
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    groups.forEach((c,gi)=>{
+      const op=0.12-gi*0.03;
+      ctx.beginPath();ctx.strokeStyle=`rgba(255,204,0,${op})`;ctx.lineWidth=0.8;
+      c.forEach((p,i)=>{const y=(p.o+p.cl)/2;if(i===0)ctx.moveTo(p.x,y);else ctx.lineTo(p.x,y);});
+      ctx.stroke();
+      c.forEach(p=>{
+        const bull=p.cl<p.o;
+        ctx.fillStyle=bull?`rgba(0,255,136,${op+0.16})`:`rgba(255,68,68,${op+0.16})`;
+        ctx.fillRect(p.x,Math.min(p.o,p.cl),11,Math.max(Math.abs(p.o-p.cl),1));
+        p.o+=(Math.random()-.5)*.5;p.cl+=(Math.random()-.5)*.5;
+      });
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',init);
+  init();draw();
+})();
+
+/* ═══════════ PRICE MATRIX ═══════════ */
+(function(){
+  const el=document.getElementById('hero-matrix');if(!el)return;
+  const syms=['NIFTY','BANKNIFTY','SENSEX','VIX','FINNIFTY','USDINR','GOLD','SILVER','CRUDEOIL','XAUUSD'];
+  let rows=[];
+  for(let i=0;i<25;i++){let r=[];for(let j=0;j<9;j++)r.push({s:syms[Math.floor(Math.random()*syms.length)],v:(Math.random()*50000+5000).toFixed(2)});rows.push(r);}
+  const render=()=>{rows.forEach(r=>r.forEach(it=>{if(Math.random()>.82)it.v=(parseFloat(it.v)+(Math.random()-.5)*2).toFixed(2);}));el.innerHTML=rows.map(r=>'<div>'+r.map(it=>`<span>${it.s} ${it.v}</span>&nbsp;&nbsp;&nbsp;`).join('')+'</div>').join('');};
+  setInterval(render,1100);render();
+})();
+
+/* ═══════════ FEED ═══════════ */
+(function(){
+  const tips=[
+    'SIGNAL: BankNifty parity dislocation detected — synthetic future +22pts above actual futures.',
+    'ANALYSIS: IV skew widening on OTM puts — protection demand rising near weekly expiry.',
+    'STRATEGY: Reversal opportunity at 55800 — call premium elevated vs Black-Scholes fair value.',
+    'MARKET: PCR at 0.84 — put-call ratio indicating near-term bullish bias on NIFTY 50.',
+    'SETUP: Greeks surface showing elevated vega near ATM — high IV regime in effect.',
+    'ALERT: BSX/BKX ratio diff expanding beyond 2-sigma of 90-day historical range.',
+    'INSIGHT: Backtesting shows 78% hit rate on parity signals at ₹20 threshold.',
+    'SIGNAL: OI wall buildup at 56000 CE — resistance zone confirmed by PCR divergence.',
+  ];
+  let idx=0;const el=document.getElementById('hr-feed');if(!el)return;
+  const rotate=()=>{el.style.opacity=0;setTimeout(()=>{el.textContent=tips[idx];el.style.opacity=1;idx=(idx+1)%tips.length;},420);};
+  rotate();setInterval(rotate,4500);
+})();
+
+/* ═══════════ INDEX ANIMATION ═══════════ */
+(function(){
+  const bases={bn:[55678,140],nf:[24453,60],fn:[22814,50],sx:[80955,200],vx:[14.82,.28]};
+  Object.entries(bases).forEach(([k,[base,range]])=>{
+    const vel=document.getElementById('hv-'+k),chg=document.getElementById('hc-'+k);
+    if(!vel||!chg)return;
+    setInterval(()=>{
+      const cur=k==='vx'?parseFloat(vel.textContent):parseFloat(vel.textContent.replace(/,/g,''));
+      const delta=(Math.random()-.5)*range*.18;
+      const v=k==='vx'?+(cur+delta).toFixed(2):Math.round(cur+delta);
+      const pct=+((v-base)/base*100).toFixed(2);
+      vel.textContent=k==='vx'?v:v.toLocaleString('en-IN');
+      chg.textContent=(pct>=0?'+':'')+pct+'%';
+      chg.className='hr-chg '+(pct>=0?'up':'dn');
+    },2200+Math.random()*1800);
+  });
+})();
+
+/* ═══════════ PARITY DEMO ═══════════ */
+let pticks=0,prevPx={},firedSigs=new Set(),parityIv=null;
+function genRows(sv,step=100){
+  const base=Math.round(sv/step)*step;
+  return Array.from({length:25},(_,i)=>{
+    const K=base+(i-12)*step,m=(sv-K)/sv,iv=17.5+Math.abs(m)*14+(m<0?1.5:0);
+    return{K,cLTP:+Math.max(.5,sv-K+(Math.random()-.48)*6+iv*.6).toFixed(2),pLTP:+Math.max(.5,K-sv+(Math.random()-.52)*6+iv*.85).toFixed(2),cOI:Math.round(500000*Math.exp(-Math.abs(m)*6)),pOI:Math.round(480000*Math.exp(-Math.abs(m)*6))};
+  }).sort((a,b)=>b.K-a.K);
+}
+function medSyn(rows){const s=rows.filter(r=>r.cLTP>1&&r.pLTP>1).map(r=>r.K+r.cLTP-r.pLTP).sort((a,b)=>a-b);const m=Math.floor(s.length/2);return s.length?+(s.length%2?s[m]:((s[m-1]+s[m])/2)).toFixed(1):55700;}
+function startParity(){
+  let sv=55700;
+  const ivs=[600,500];
+  const tick=()=>{
+    sv+=(Math.random()-.49)*70;
+    const rows=genRows(sv,100),lm={};rows.forEach(r=>lm[r.K]=r);
+    const fut=medSyn(rows);
+    const atm=rows.find(r=>Math.abs(r.K-sv)===Math.min(...rows.map(x=>Math.abs(x.K-sv))));
+    const syn=atm?+(atm.K+atm.cLTP-atm.pLTP).toFixed(1):sv;
+    const ai=rows.findIndex(r=>r.K===atm?.K);
+    const vis=rows.slice(Math.max(0,ai-5),Math.min(rows.length,ai+6));
+    const cW=rows.reduce((a,b)=>a.cOI>b.cOI?a:b).K;
+    const pW=rows.reduce((a,b)=>a.pOI>b.pOI?a:b).K;
+    const tC=rows.reduce((s,r)=>s+r.cOI,0),tP=rows.reduce((s,r)=>s+r.pOI,0);
+    const u=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    u('p-spot',sv.toFixed(1));u('p-syn',syn);u('p-atm',atm?.K||'—');u('p-cw',cW);u('p-pw',pW);u('p-pcr',(tP/tC).toFixed(2));u('p-ticks',++pticks);
+    const th=document.getElementById('p-thead');if(!th)return;
+    th.innerHTML=`<tr><th class="th-p">PUT LTP</th>${ivs.map(v=>`<th class="th-p" style="opacity:.5">${v}</th>`).join('')}<th class="th-s">STRIKE</th><th class="th-x">SYN±</th><th class="th-c">CALL LTP</th>${ivs.map(v=>`<th class="th-c" style="opacity:.5">${v}</th>`).join('')}<th class="th-x">SIGNAL</th></tr>`;
+    const gd=(s,iv,sd)=>{if(sd==='c'){const b=lm[s]?.cLTP,c=lm[s+iv]?.cLTP;return(b!=null&&c!=null)?+(b-c).toFixed(2):null;}const b=lm[s]?.pLTP,c=lm[s-iv]?.pLTP;return(b!=null&&c!=null)?+(b-c).toFixed(2):null;};
+    const fd=v=>{if(v==null)return`<td class="da">—</td>`;const cl=v>0?'dp':v<0?'dn':'dz';return`<td class="${cl}">${v>0?'+':''}${v}</td>`;};
+    const tb=document.getElementById('p-tbody');if(!tb)return;
+    const sigs=[];
+    tb.innerHTML='';
+    vis.forEach(r=>{
+      const isA=r.K===atm?.K;
+      const pd=+(r.K+r.cLTP-r.pLTP-fut).toFixed(1);
+      const ch=prevPx[r.K]&&(prevPx[r.K].c!==r.cLTP||prevPx[r.K].p!==r.pLTP);
+      prevPx[r.K]={c:r.cLTP,p:r.pLTP};
+      if(pd>20)sigs.push({K:r.K,type:'SELL',msg:`SELL CE / BUY PE @ ${r.K}  [+₹${pd}]`});
+      if(pd<-20)sigs.push({K:r.K,type:'BUY',msg:`BUY CE / SELL PE @ ${r.K}  [−₹${Math.abs(pd)}]`});
+      let sc=`<td class="sn">—</td>`;
+      if(pd>20)sc=`<td class="ss">▼ SELL CE</td>`;
+      if(pd<-20)sc=`<td class="sb_">▲ BUY CE</td>`;
+      const pdc=pd>20?'pp':pd<-20?'pn':'pz';
+      const tr=document.createElement('tr');
+      if(isA)tr.className='atm';if(ch)tr.classList.add('fl');
+      tr.innerHTML=`<td class="vp">${r.pLTP.toFixed(2)}</td>${ivs.map(iv=>fd(gd(r.K,iv,'p'))).join('')}<td class="${isA?'va':'vs'}">${r.K}${isA?'<div style="font-size:6px;letter-spacing:.1em;color:var(--brass)">ATM</div>':''}</td><td class="${pdc}">${pd>0?'+':''}${pd}</td><td class="vc">${r.cLTP.toFixed(2)}</td>${ivs.map(iv=>fd(gd(r.K,iv,'c'))).join('')}${sc}`;
+      tb.appendChild(tr);
+    });
+    const strip=document.getElementById('p-sigs');
+    if(strip){strip.querySelectorAll('.chip').forEach(e=>e.remove());const ee=strip.querySelector('.sig-nil');if(ee)ee.style.display=sigs.length?'none':'';sigs.forEach(s=>{const c=document.createElement('span');c.className='chip '+(s.type==='SELL'?'chip-sell':'chip-buy');c.textContent=s.msg;strip.appendChild(c);});}
+    sigs.forEach(s=>{
+      const k=s.K+'-'+s.type;if(firedSigs.has(k))return;firedSigs.add(k);
+      const bn=document.getElementById('p-banner');
+      if(bn){bn.className='sig-banner '+(s.type==='SELL'?'sb-sell':'sb-buy');bn.textContent='● '+s.msg+' — '+new Date().toLocaleTimeString('en-IN');bn.style.display='block';setTimeout(()=>{bn.style.display='none';firedSigs.delete(k);},6000);}
+    });
+  };
+  tick();parityIv=setInterval(tick,2500);
+}
+startParity();
+
+/* ═══════════ GREEKS ═══════════ */
+(function(){
+  const ivData=[{l:'ATM-400',iv:24.2},{l:'ATM-300',iv:21.8},{l:'ATM-200',iv:19.6},{l:'ATM-100',iv:18.1},{l:'ATM',iv:17.5},{l:'ATM+100',iv:17.9},{l:'ATM+200',iv:18.8},{l:'ATM+300',iv:20.4},{l:'ATM+400',iv:22.1}];
+  const wrap=document.getElementById('iv-rows');if(!wrap)return;
+  wrap.innerHTML=ivData.map(d=>`<div class="iv-row"><span class="iv-lbl">${d.l}</span><div class="iv-bg"><div class="iv-fill" id="ivb-${d.l.replace(/[+-]/g,c=>c==='+','p').replace('-','m')}" style="width:0%"></div></div><span class="iv-val">${d.iv.toFixed(1)}%</span></div>`).join('');
+  setTimeout(()=>ivData.forEach(d=>{const id='ivb-'+d.l.replace('+','p').replace(/-/g,'m');const el=document.getElementById(id);if(el)el.style.width=(d.iv/30*100)+'%';}),400);
+  setInterval(()=>{
+    const sv=55700+(Math.random()-.5)*300,mn=(sv-55700)/55700;
+    const dd=+Math.max(.01,Math.min(.99,.5+mn*3+(Math.random()-.5)*.1)).toFixed(3);
+    const gg=+(0.000142+Math.abs(mn)*.00005+(Math.random()-.5)*.00002).toFixed(6);
+    const tt=+(-18.4+mn*5+(Math.random()-.5)*3).toFixed(1);
+    const vv=+(42.6+Math.abs(mn)*10+(Math.random()-.5)*5).toFixed(1);
+    const u=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    u('g-d',dd);u('g-g',gg);u('g-t',tt);u('g-v',vv);
+    const set=(id,w)=>{const e=document.getElementById(id);if(e)e.style.width=w+'%';};
+    set('gb-d',dd*100);set('gb-g',Math.min(100,gg*700000));set('gb-t',Math.min(100,Math.abs(tt)/30*100));set('gb-v',Math.min(100,vv/100*100));
+  },2200);
+})();
+
+/* ═══════════ EQUITY CURVE ═══════════ */
+(function(){
+  const W=600,H=64;let pts=[],y=32;
+  for(let i=0;i<50;i++){y=Math.max(5,Math.min(59,y+(Math.random()-.42)*8));pts.push({x:i/49*W,y});}
+  const pathD='M '+pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ');
+  const fin=pts[pts.length-1].y<32;
+  const svg=document.getElementById('equity-svg');
+  if(svg)svg.innerHTML=`<line x1="0" y1="32" x2="${W}" y2="32" stroke="#1e2028" stroke-width="0.5" stroke-dasharray="4,4"/><path d="${pathD}" fill="none" stroke="${fin?'#3a8c5a':'#a84242'}" stroke-width="1.5"/><circle cx="${pts[pts.length-1].x}" cy="${pts[pts.length-1].y}" r="3" fill="${fin?'#3a8c5a':'#a84242'}"/><text x="4" y="14" fill="#3a8c5a" font-size="9" font-family="Roboto Mono">+₹${(Math.random()*800+400).toFixed(0)}/trade avg</text>`;
+})();
+
+/* ═══════════ MRR COUNTER ═══════════ */
+(function(){
+  let triggered=false;
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting&&!triggered){
+        triggered=true;
+        const target=374600;let cur=0;const step=target/60;
+        const iv=setInterval(()=>{cur=Math.min(cur+step,target);document.getElementById('mrr-val').textContent='₹'+Math.round(cur).toLocaleString('en-IN');if(cur>=target){clearInterval(iv);document.getElementById('mrr-val').textContent='₹3,74,600';}},22);
+        setTimeout(()=>document.getElementById('rbar-fill').style.width='62%',300);
+      }
+    });
+  },{threshold:.3});
+  const el=document.getElementById('revenue');if(el)obs.observe(el);
+})();
+
+/* ═══════════ SCROLL REVEAL ═══════════ */
+(function(){
+  const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+  // prob-row staggered
+  const pObs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){[0,1,2].forEach(i=>{const r=document.getElementById('pr'+i);if(r)setTimeout(()=>r.classList.add('show'),i*200+100);});pObs.unobserve(e.target);}
+    });
+  },{threshold:.2});
+  const prob=document.getElementById('problem');if(prob)pObs.observe(prob);
+  // tools-grid staggered
+  const tObs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){document.querySelectorAll('.tool-cell').forEach((c,i)=>setTimeout(()=>c.classList.add('show'),i*80+50));tObs.unobserve(e.target);}
+    });
+  },{threshold:.15});
+  const tg=document.getElementById('tools-grid');if(tg)tObs.observe(tg);
+})();
+
+/* ═══════════ JOIN HANDLER ═══════════ */
+function handleJoin(e){
+  e.preventDefault();
+  const email=document.getElementById('join-email').value;
+  // Store email locally, redirect to varesearch.trade when live
+  const btn=e.target.querySelector('button');
+  if(btn){btn.textContent='✓ Registered!';btn.style.background='var(--gain)';}
+  setTimeout(()=>{if(btn){btn.textContent='Join Platform';btn.style.background='';}},3000);
+  // When site is live: window.location.href = 'https://www.varesearch.trade/register?email='+encodeURIComponent(email);
+}
+function joinPlan(plan){
+  document.getElementById('join-email').focus();
+  document.getElementById('hero').scrollIntoView({behavior:'smooth'});
+  // When live: window.location.href = 'https://www.varesearch.trade/register?plan='+plan;
+}
+</script>
+</body>
+</html>
